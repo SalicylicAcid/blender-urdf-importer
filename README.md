@@ -1,40 +1,104 @@
 <img src="https://download.blender.org/branding/blender_logo_socket.png" width="280"> <img src="https://www.ros.org/wp-content/uploads/2013/10/rosorg-logo1.png" width="250"/> 
 
-# Blender URDF Importer
-A minimalistic URDF file importer for Blender.
-It allows you to bring your robot model into Blender and creates an armature so you can easily pose it.
-This is an alpha version developed and tested for Blender 2.9.1 but should work for all versions since 2.8.
-If you encouter issues with your URDF file or version of Blender, feel free to open an issue.
+# Blender URDF Importer (Blender 5.1+ Compatible)
 
-The armature created for the robot contains a bone for each revolute joint that can only rotate along the correct axis.
-Joint limits, prismatic joints and planar joints are not supported yet.
+A robust URDF file importer for Blender that brings your robot models into Blender with full armature support for posing and animation.
 
-## Installation
-Currently the easiest way to install is to clone or download this repository and copy the `urdf_importer` directory into the addons directory for Blender (e.g. `/home/blender-2.91.0/2.91/scripts/addons`):
+## 项目来源
 
-Then open Blender and in `Edit > Preferences > Add-ons` search for 'URDF Importer' and check the box.
+本项目基于 [Victorlouisdg/blender-urdf-importer](https://github.com/Victorlouisdg/blender-urdf-importer) 修改，针对 **Blender 5.1.1** 及现代版本进行了全面适配和功能改进。
 
-## Usage
-If the installation was succesful, you should see `URDF` as an option in the `File > Import` menu.
+## 主要改进与新功能
 
-**Important note**: many URDF files reference mesh files inside ROS packages.
-To find these mesh files, this addon relies on the environment variable `ROS_PACKAGE_PATH` to be set correctly.
-This means that if the package that is referenced in the URDF file is in your catkin workspace, 
-you have to source the `devel/setup.bash` file in your workspace first and then open Blender via the same terminal.
+### 1. **Blender 版本兼容性**
+- 支持 Blender 5.1.1 及以上版本
+- 兼容 Blender 4.1+ 的新导入 API（`wm.stl_import`, `wm.obj_import` 等）
+- 向下兼容旧版 Blender API
+- 自动尝试多个导入方法确保可靠性
 
+### 2. **多种网格格式支持**
+- **STL** (.stl) - 使用新的 `wm.stl_import` API 和旧版兼容方案
+- **OBJ** (.obj) - 使用 `wm.obj_import` 或 `import_scene.obj`
+- **Collada/DAE** (.dae, .xml) - 完整的 Collada 格式支持
 
-## How do I get an URDF file for my robot?
-The ROS packages for URDF files are generally called `something_description`. 
-For example, there's a ROS package [ur_description](https://github.com/ros-industrial/universal_robot) for the robots from Universal Robots.
-However, you will often find that these packages don't contain the URDF files themselves.
-Instead you will find `.xacro` files that you will have to use with the xacro command to generate the URDFs.
+### 3. **网格文件路径解析**
+- 支持相对于 URDF 文件的相对路径
+- 支持 ROS package:// 协议引用
+- 支持绝对路径直接加载
+- 智能路径解析，多种策略组合确保文件找到
+- 针对标准解压结构 `./<robot_name>/{meshes,urdf,xml}` 优化了 `package://` 解析
+- 在未设置 `ROS_PACKAGE_PATH` 时也可优先按标准目录结构尝试定位 mesh
 
-## How can I add inverse kinematics?
-I recommend adding a bone to the armature in edit mode in front of the end effector (that is not its child). 
-Then add an IK constraint to the end-effector and set the target bone to the newly created bone.
+### 4. **几何体和变换改进**
+- 正确处理 `mesh` 元素的 `scale` 属性
+- 支持多个 `<visual>` 元素（原版仅支持单个）
+- 精确应用 Origin 变换（位置和 RPY 旋转）
+- 自动清理导入过程中的相机和灯光对象
+- 新增导入后自动贴地：当模型最低点低于地面时，自动整体上移到 Z=0
+- 导入结束后自动恢复 Blender 3D 游标，避免游标停留在关节或脚底位置
 
-## Contributing
-This is my first Blender addon so there's probably many ways to improve it.
-If you have any ideas on how to do this, feel free to open a discussion or issue :)
+### 5. **骨骼和蒙皮系统**
+- 为每个 revolute joint 创建骨骼，支持正确的旋转轴约束
+- 完整的蒙皮系统（Armature 绑定）
+- 自动创建顶点组并应用蒙皮权重
+- 支持逆向运动学（IK）约束
 
-You can also contact me at `victorlouisdg@gmail.com`
+### 6. **错误处理与日志**
+- 详细的错误信息和故障排查指南
+- 改进的异常捕获机制
+
+## 安装
+
+1. 克隆或下载本仓库
+2. 将 `urdf_importer` 目录复制到 Blender 的插件目录：
+   - Linux/Mac: `~/.config/blender/5.1/scripts/addons/`
+   - Windows: `%APPDATA%\Blender Foundation\Blender\5.1\scripts\addons\`
+
+3. 打开 Blender，进入 `Edit > Preferences > Add-ons`，搜索 'URDF Importer' 并启用
+
+## 使用方法
+
+安装成功后，在 `File > Import` 菜单中会出现 `URDF (.urdf)` 选项。
+
+### 重要提示
+
+许多 URDF 文件通过 `package://` 协议引用 ROS 包中的网格文件。为了正确解析这些路径：
+
+1. 确保 `ROS_PACKAGE_PATH` 环境变量已设置正确
+2. 从终端 source 您的 ROS workspace 的 `devel/setup.bash`
+3. 从同一终端启动 Blender
+
+如果未配置 ROS 环境变量，插件仍会优先按常见的标准目录结构尝试解析 `package://` 路径：
+
+```text
+./<robot_name>
+├─meshes
+├─urdf
+└─xml
+```
+
+如果 URDF 中的网格文件使用相对路径，确保路径相对于 URDF 文件位置有效。
+
+**Mesh 显示效果优化**: 如果导入的模型 mesh 表面出现放射状阻影伪影，可先选择一根连杙（例如在 Outliner 中点击 Armature 对象），然后按 `A` 键全选所有下属 mesh，右键菩单选择“自动平滑着色”或“平正着色”来优化显示效果。
+
+## 获取 URDF 文件
+
+ROS 机器人描述包通常命名为 `<robot>_description`，例如：
+- [ur_description](https://github.com/ros-industrial/universal_robot) - Universal Robots UR 系列
+- 许多包包含 `.xacro` 文件，需使用 `xacro` 命令生成 URDF
+
+## 添加逆向运动学
+
+1. 在编辑模式中于末端执行器前创建一个新骨骼
+2. 为末端执行器添加 IK 约束
+3. 将约束目标设置为新建的骨骼
+
+## 支持的功能
+
+✅ Revolute joints with axis constraints  
+✅ 多个 visual 元素  
+✅ 多种网格格式  
+✅ Origin 变换（位置和旋转）  
+❌ Joint limits  
+❌ Prismatic joints  
+❌ Planar joints
