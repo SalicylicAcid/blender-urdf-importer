@@ -49,12 +49,23 @@
 
 ## 安装
 
+Blender 官方手册将这类插件归为“旧式插件（Legacy Add-ons）”，可通过“从磁盘安装（Install from Disk）”安装 `.zip` 包，也可以通过脚本目录识别解压后的插件文件夹。
+
+### 方式一：直接复制到插件目录
+
 1. 克隆或下载本仓库
-2. 将 `urdf_importer` 目录复制到 Blender 的插件目录：
+2. 将 `urdf_importer` 文件夹复制到 Blender 的插件目录：
    - Linux/Mac：`~/.config/blender/5.1/scripts/addons/`
    - Windows：`%APPDATA%\Blender Foundation\Blender\5.1\scripts\addons\`
-
 3. 打开 Blender，进入 `Edit > Preferences > Add-ons`，搜索 `URDF Importer` 并启用
+
+### 方式二：压缩为 zip 后安装
+
+1. 将 `urdf_importer` 文件夹压缩为 `.zip` 文件，且压缩包内应直接包含 `urdf_importer/` 目录
+2. 在 Blender 中打开 `Edit > Preferences > Add-ons`
+3. 点击 `Install from Disk`（中文界面为“从磁盘安装”）
+4. 选择刚才生成的 `.zip` 文件并安装
+5. 安装完成后，在插件列表中勾选启用 `URDF Importer`
 
 ## 使用方法
 
